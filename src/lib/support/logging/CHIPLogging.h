@@ -46,6 +46,11 @@
 #include <stdarg.h>
 #include <stdint.h>
 
+#include "pw_tokenizer/tokenize.h"
+#include "pw_tokenizer/tokenize_to_global_handler.h"
+#include "pw_tokenizer/tokenize_to_global_handler_with_payload.h"
+
+
 /**
  *   @namespace chip::Logging
  *
@@ -106,8 +111,26 @@ void SetLogFilter(uint8_t category);
  *
  */
 #ifndef ChipLogError
-#define ChipLogError(MOD, MSG, ...)                                                                                                \
-    chip::Logging::Log(chip::Logging::kLogModule_##MOD, chip::Logging::kLogCategory_Error, MSG, ##__VA_ARGS__)
+#define ChipLogError(MOD, MSG, ...)										\
+	PW_TOKENIZE_TO_GLOBAL_HANDLER_WITH_PAYLOAD(							\
+		(pw_tokenizer_Payload)(chip::Logging::kLogModule_##MOD),		\
+		MSG,															\
+		__VA_ARGS__)
+
+extern "C" void pw_tokenizer_HandleEncodedMessageWithPayload(
+	uintptr_t level, const uint8_t encoded_message[], size_t size_bytes) {
+	char *buffer = (char*)malloc(2* size_bytes + 1);
+	if(buffer)
+	{
+		for(int i = 0; i < size_bytes; i++)
+		{
+			sprintf(buffer + 2*i, "%02x", encoded_message[i]);
+		}
+		buffer[2 * size_bytes] = '\0';
+		chip::Logging::Log(level, chip::Logging::kLogCategory_Error, "%s", buffer);
+		free(buffer);
+	}
+}
 #endif
 #else
 #define ChipLogError(MOD, MSG, ...) ((void) 0)
