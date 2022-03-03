@@ -48,26 +48,17 @@ pw::stream::SysIoWriter sysIoWriter;
 // May be nullptr
 ::chip::rpc::Mutex * uart_mutex;
 
-template <size_t buffer_size>
-class ChipRpcChannelOutputBuffer : public pw::rpc::ChannelOutput
+class ChipRpcChannelOutput : public pw::rpc::ChannelOutput
 {
 public:
-    constexpr ChipRpcChannelOutputBuffer(pw::stream::Writer & writer, uint8_t address, const char * channel_name) :
+    constexpr ChipRpcChannelOutput(pw::stream::Writer & writer, uint8_t address, const char * channel_name) :
         pw::rpc::ChannelOutput(channel_name), mWriter(writer), mAddress(address)
     {}
 
-    std::span<std::byte> AcquireBuffer() override
-    {
-        if (uart_mutex)
-        {
-            uart_mutex->Lock();
-        }
-        return mBuffer;
-    }
+    size_t MaximumTransmissionUnit() override { return kMaxTransmissionUnit; }
 
-    pw::Status SendAndReleaseBuffer(std::span<const std::byte> buffer) override
+    pw::Status Send(std::span<const std::byte> buffer) override
     {
-        PW_DASSERT(buffer.data() == mBuffer.data());
         if (buffer.empty())
         {
             if (uart_mutex)
@@ -83,15 +74,13 @@ public:
         }
         return ret;
     }
-
 private:
     pw::stream::Writer & mWriter;
-    std::array<std::byte, buffer_size> mBuffer;
     const uint8_t mAddress;
 };
 
 // Set up the output channel for the pw_rpc server to use to use.
-ChipRpcChannelOutputBuffer<kMaxTransmissionUnit> hdlc_channel_output(sysIoWriter, pw::hdlc::kDefaultRpcAddress, "HDLC channel");
+ChipRpcChannelOutput hdlc_channel_output(sysIoWriter, pw::hdlc::kDefaultRpcAddress, "HDLC channel");
 
 pw::rpc::Channel channels[] = { pw::rpc::Channel::Create<1>(&hdlc_channel_output) };
 

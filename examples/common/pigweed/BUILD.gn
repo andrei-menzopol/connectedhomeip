@@ -120,6 +120,7 @@ pw_source_set("system_rpc_server") {
     "$dir_pw_hdlc:pw_rpc",
     "$dir_pw_hdlc:rpc_channel_output",
     "$dir_pw_stream:sys_io_stream",
+    "$dir_pw_assert:lite_compatibility_backend",
   ]
 
   public_configs = [ ":default_config" ]
