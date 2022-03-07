@@ -24,6 +24,8 @@ network.
 -   [Building](#building)
 -   [Flashing and debugging](#flashdebug)
 -   [Testing the example](#testing-the-example)
+-   [Tinycrypt ECC operations](#tinycrypt)
+    -    [Building steps](#tinycryptbuildingsteps)
 
 <hr>
 
@@ -228,3 +230,24 @@ The app can be deployed against any generic OpenThread Border Router. See the
 guide
 [Commissioning NXP K32W using Android CHIPTool](../../../docs/guides/nxp_k32w_android_commissioning.md)
 for step-by-step instructions.
+
+<a name="tinycrypt"></a>
+
+## Tinycrypt ECC operations
+
+<a name="tinycryptbuildingsteps"></a>
+### Building steps
+
+
+Note: This solution is temporary.
+
+In order to use the tinycrypt ecc operations, some extra steps have to be done during building:
+
+- Run the tinycrypt patching script after activating the environment.
+
+```
+user@ubuntu:~/Desktop/git/connectedhomeip$ ./third_party/nxp/tinycrypt/patch_tinycrypt.sh
+```
+- Build without Secure element (_chip_with_se05x=0_) and with tinycrypt enabled (_mbedtls_use_tinycrypt=true_).
+
+After running the patch_tinycrypt.sh script, the tinycrypt ecc operations are enabled. To disable them, simply do not include (_mbedtls_use_tinycrypt=true_) in the build.
