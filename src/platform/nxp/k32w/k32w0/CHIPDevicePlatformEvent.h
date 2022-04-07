@@ -58,6 +58,7 @@ struct ChipDevicePlatformEvent final
 {
     union
     {
+    	int a;
         /* None currently defined */
     };
 };

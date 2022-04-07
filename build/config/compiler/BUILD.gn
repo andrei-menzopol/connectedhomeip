@@ -81,6 +81,7 @@ config("abi_default") {
         cflags += [ "-march=${arm_arch}" ]
       }
       if (arm_cpu != "") {
+        cflags += [ "--target=arm-none-eabi" ]
         cflags += [ "-mcpu=${arm_cpu}" ]
       }
       if (arm_tune != "") {
@@ -213,8 +214,6 @@ config("warnings_common") {
 
   ldflags = []
   if (treat_warnings_as_errors) {
-    cflags += [ "-Werror" ]
-    ldflags += [ "-Werror" ]
   }
 
   if (current_os != "mac" && current_os != "ios") {
@@ -230,11 +229,9 @@ config("warnings_common") {
 config("strict_warnings") {
   cflags = [
     "-Wextra",
-    "-Wshadow",
     "-Wunreachable-code",
     "-Wvla",
     "-Wformat",
-    "-Wformat-nonliteral",
     "-Wformat-security",
   ]
 
@@ -516,12 +513,31 @@ config("aliasing_default") {
 config("specs_default") {
   if (current_cpu == "arm" && current_os == "freertos") {
     cflags = [
-      "--specs=nosys.specs",
-      "--specs=nano.specs",
+      "-Qunused-arguments",
+      "-nodefaultlibs",
+      "--sysroot=../../../../../../../.environment/cipd/packages/arm/arm-none-eabi",
+      "-isystem../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/include/newlib-nano",
+      "-isystem-after../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/include",
+      "-stdlib++-isystem../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/include/c++/10.2.1",
+      "-isystem../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/include/c++/10.2.1/arm-none-eabi/thumb/v7e-m/nofp",
+      "-std=c++17",
     ]
 
-    libs = [ "nosys" ]
-
     ldflags = cflags
+    
+    ldflags += [
+      "-lnosys", 
+      "-L../../../../../../../.environment/cipd/packages/arm/lib/gcc/arm-none-eabi/10.2.1/thumb/v7e-m/nofp",
+      "-L../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/lib/thumb/v7e-m/nofp",
+      "-lc_nano",
+      "-lm",
+      "-lgcc",
+      "-lstdc++_nano",
+      "../../../../../../../.environment/cipd/packages/arm/lib/gcc/arm-none-eabi/10.2.1/thumb/v7e-m/nofp/crtfastmath.o",
+      "../../../../../../../.environment/cipd/packages/arm/lib/gcc/arm-none-eabi/10.2.1/thumb/v7e-m/nofp/crti.o",
+      "../../../../../../../.environment/cipd/packages/arm/lib/gcc/arm-none-eabi/10.2.1/thumb/v7e-m/nofp/crtn.o",
+      "../../../../../../../.environment/cipd/packages/arm/arm-none-eabi/lib/thumb/v7e-m/nofp/crt0.o",
+    ]
+    
   }
 }
